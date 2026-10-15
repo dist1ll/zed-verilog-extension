@@ -1,6 +1,4 @@
-use language_server::{
-    slang::Slang, svls::Svls, verible::Verible, veridian::Veridian, LanguageServer,
-};
+use language_server::{slang::Slang, LanguageServer};
 
 use zed::{LanguageServerId, Worktree};
 use zed_extension_api::{self as zed};
@@ -8,10 +6,7 @@ use zed_extension_api::{self as zed};
 pub mod language_server;
 
 struct VerilogExtension {
-    verible: Verible,
-    veridian: Veridian,
     slang: Slang,
-    svls: Svls,
 }
 
 impl zed::Extension for VerilogExtension {
@@ -20,10 +15,7 @@ impl zed::Extension for VerilogExtension {
         Self: Sized,
     {
         Self {
-            verible: Default::default(),
-            veridian: Default::default(),
             slang: Default::default(),
-            svls: Default::default(),
         }
     }
 
@@ -35,31 +27,6 @@ impl zed::Extension for VerilogExtension {
         match language_server_id.as_ref() {
             Slang::LANGUAGE_SERVER_ID => Ok(zed::Command {
                 command: self.slang.get_binary(language_server_id, worktree)?,
-                args: Vec::new(),
-                env: Vec::new(),
-            }),
-            Veridian::LANGUAGE_SERVER_ID => Ok(zed::Command {
-                command: self.veridian.get_binary(language_server_id, worktree)?,
-                args: Vec::new(),
-                env: Vec::new(),
-            }),
-            Verible::LANGUAGE_SERVER_ID => {
-                let language_settings =
-                    zed::settings::LanguageSettings::for_worktree(Some("SystemVerilog"), worktree)?;
-
-                Ok(zed::Command {
-                    command: self.verible.get_binary(language_server_id, worktree)?,
-                    args: vec![
-                        "--indentation_spaces".to_string(),
-                        language_settings.tab_size.to_string(),
-                        "--rules_config".to_string(),
-                        worktree.root_path() + "/.rules.verible_lint",
-                    ],
-                    env: Vec::new(),
-                })
-            }
-            Svls::LANGUAGE_SERVER_ID => Ok(zed::Command {
-                command: self.svls.get_binary(language_server_id, worktree)?,
                 args: Vec::new(),
                 env: Vec::new(),
             }),

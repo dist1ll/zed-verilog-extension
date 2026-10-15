@@ -4,9 +4,7 @@ use std::path::{Component, Path};
 
 use flate2::read::GzDecoder;
 use zed_extension_api::{Architecture, DownloadedFileType, Os};
-use zed_verilog_extension::language_server::{
-    slang::Slang, svls::Svls, verible::Verible, veridian::Veridian, LanguageServer,
-};
+use zed_verilog_extension::language_server::{slang::Slang, LanguageServer};
 
 const ALL_PLATFORMS: &[(Os, Architecture)] = &[
     (Os::Mac, Architecture::Aarch64),
@@ -21,32 +19,12 @@ const ALL_PLATFORMS: &[(Os, Architecture)] = &[
 ];
 
 #[test]
-fn verible_release_assets() {
-    verify_release_assets::<Verible>();
-}
-
-#[test]
 fn slang_release_assets() {
     verify_release_assets::<Slang>();
 }
 
-#[test]
-fn veridian_release_assets() {
-    let tag = resolve_tag_with_previous_fallback::<Veridian>()
-        .unwrap_or_else(|err| panic!("failed to resolve veridian release tag: {err}"));
-    verify_release_assets_against_tag::<Veridian>(&tag);
-}
-
-#[test]
-fn svls_release_assets() {
-    verify_release_assets::<Svls>();
-}
-
 fn verify_release_assets<S: LanguageServer>() {
-    verify_release_assets_against_tag::<S>(S::DOWNLOAD_TAG);
-}
-
-fn verify_release_assets_against_tag<S: LanguageServer>(tag: &str) {
+    let tag = S::DOWNLOAD_TAG;
     let mut assets: HashMap<String, Vec<u8>> = HashMap::new();
     let mut supported = 0;
     let mut errors = Vec::new();
@@ -142,44 +120,8 @@ fn check_executable(_metadata: &std::fs::Metadata, _binary_path: &str) -> Result
     Ok(())
 }
 
-fn resolve_tag_with_previous_fallback<S: LanguageServer>() -> Result<String, String> {
-    let current = S::DOWNLOAD_TAG;
-    let Some(previous) = previous_patch_tag(current) else {
-        return Ok(current.to_string());
-    };
-
-    for &(os, arch) in ALL_PLATFORMS {
-        let Ok(asset_name) = S::asset_name(current, os, arch) else {
-            continue;
-        };
-        if asset_exists(&download_url(S::DOWNLOAD_REPO, current, &asset_name))? {
-            return Ok(current.to_string());
-        }
-    }
-
-    eprintln!(
-        "no assets published for `{}` at `{current}`; checking previous release `{previous}` instead",
-        S::LANGUAGE_SERVER_ID
-    );
-    Ok(previous)
-}
-
-fn previous_patch_tag(tag: &str) -> Option<String> {
-    let (rest, patch) = tag.rsplit_once('.')?;
-    let previous = patch.parse::<u32>().ok()?.checked_sub(1)?;
-    Some(format!("{rest}.{previous}"))
-}
-
 fn download_url(repo: &str, tag: &str, asset_name: &str) -> String {
     format!("https://github.com/{repo}/releases/download/{tag}/{asset_name}")
-}
-
-fn asset_exists(url: &str) -> Result<bool, String> {
-    match ureq::head(url).call() {
-        Ok(_) => Ok(true),
-        Err(ureq::Error::Status(404, _)) => Ok(false),
-        Err(err) => Err(format!("failed to check `{url}`: {err}")),
-    }
 }
 
 fn download(url: &str) -> Result<Vec<u8>, String> {

@@ -1,7 +1,4 @@
 pub mod slang;
-pub mod svls;
-pub mod verible;
-pub mod veridian;
 
 use std::fs;
 use zed_extension_api::{self as zed};

@@ -1,6 +1,7 @@
 # Zed Verilog Extension
 
-Adds Verilog and SystemVerilog support for [Zed](https://zed.dev/).
+Adds Verilog and SystemVerilog support for [Zed](https://zed.dev/) using
+[slang-server](https://github.com/hudson-trading/slang-server).
 
 ## Features
 
@@ -12,38 +13,33 @@ Adds Verilog and SystemVerilog support for [Zed](https://zed.dev/).
 
 ## Installation
 
-1. Open Zed
-2. Open the command palette
-3. Enter `zed: extensions`
-4. Search for `Verilog` using the search bar on the extensions page.
-5. Press `Install` and the language servers will automatically be downloaded.
+1. Clone [this fork](https://github.com/dist1ll/zed-verilog-extension).
+2. Open Zed and run `zed: install dev extension` from the command palette.
+3. Select the cloned extension directory.
+4. Open a Verilog or SystemVerilog file.
 
-## Language Servers
+## Language Server
 
-This extension has four language servers: [Verible](https://github.com/chipsalliance/verible), [Veridian](https://github.com/vivekmalneedi/veridian), [slang-server](https://github.com/hudson-trading/slang-server), and [svls](https://github.com/dalance/svls). **By default, only `slang-server` is enabled**. To enable other language servers, add the following to your settings file:
+This fork supports only slang-server. It uses `slang-server` from your PATH when
+available, otherwise it downloads the pinned release from Hudson River Trading.
+To explicitly select it in Zed's settings:
 
 ```jsonc
 "languages": {
   "SystemVerilog": {
-    "language_servers": ["verible"] // replace with list of language servers to enable
+    "language_servers": ["slang"]
   }
 }
 ```
 
 ## Configuration
 
-Configuration for this extension is done in two places. First is by adding "SystemVerilog" your settings file and using the [language settings](https://zed.dev/docs/configuring-zed#languages).
+Configure editor behavior under `languages.SystemVerilog` in Zed's settings.
+For slang-server's project configuration, see the
+[slang-server documentation](https://hudson-trading.github.io/slang-server/start/config/).
 
-Secondly, you can configure the veridian language server by creating a `veridian.yml` file in your project root and using the settings documented [here](https://github.com/vivekmalneedi/veridian?tab=readme-ov-file#configuration).
-
-> [!NOTE]
-> Since this extension doesn't use the verible language server through veridian, verible specific settings in `veridian.yml` will not work.
-
-> [!NOTE]
-> svls requires a `.svls.toml` file at your project root to enable linting.
-> Without it, the linter is silently disabled.
-> To customize liniting rules, you will also need a `.svlint.toml` file.
-> See the [svls documentation](https://github.com/dalance/svls#configuration) for details.
+To use a specific local binary and bypass automatic downloads, set its absolute
+path under `lsp.slang.binary.path` in Zed's settings.
 
 ## License
 
